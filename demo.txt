@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 THIS  SSD THIS is a git sasa
+=======
+THIS IS UPDATED  THIS IS A BRANCH THIS is a git sasa
+>>>>>>> Bfeature
