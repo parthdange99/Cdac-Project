@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FundBridge Simple Architecture</title>
+  <!-- Mermaid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #ffffff;
+      font-family: sans-serif;
+    }
+    .diagram-container {
+      width: 100%;
+      max-width: 800px; /* Kept narrow for report/portrait mode */
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <div class="mermaid">
+      graph TD
+          %% Colors
+          classDef client fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:white,font-weight:bold,padding:10px
+          classDef gateway fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:white
+          classDef service fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white
+          classDef external fill:#10b981,stroke:#059669,stroke-width:2px,color:white
+
+          %% Nodes
+          Client["💻 React Frontend"]:::client
+          Gateway["🚪 API Gateway"]:::gateway
+          
+          subgraph Core ["Microservices"]
+              Auth["🔒 Auth"]:::service
+              User["👤 User"]:::service
+              Campaign["📢 Campaign"]:::service
+              Donation["💝 Donation"]:::service
+              Loan["🏦 Loan"]:::service
+              Payment["💳 Payment"]:::service
+              Notif["🔔 Notification"]:::service
+              AI["✨ AI"]:::service
+          end
+          
+          Groq["🧠 Groq AI API"]:::external
+          Razorpay["💲 Razorpay API"]:::external
+          
+          %% Connections
+          Client ==>|REST API| Gateway
+          
+          Gateway --> Auth
+          Gateway --> User
+          Gateway --> Campaign
+          Gateway --> Donation
+          Gateway --> Loan
+          Gateway --> Payment
+          Gateway --> Notif
+          Gateway --> AI
+          
+          AI -.-> Groq
+          Payment -.-> Razorpay
+    </div>
+  </div>
+</body>
+</html>

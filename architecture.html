@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FundBridge – Microservices Architecture</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #080d1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    /* ── Title ── */
+    .title-block {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .title-block h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .title-block p {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    /* ── Layout ── */
+    .diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      max-width: 980px;
+      position: relative;
+    }
+
+    /* ── Generic Card ── */
+    .card {
+      border-radius: 14px;
+      padding: 16px 22px;
+      border: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(12px);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      cursor: default;
+      position: relative;
+      text-align: center;
+      min-width: 160px;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      z-index: 10;
+    }
+    .card .svc-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .card .port {
+      font-size: 0.72rem;
+      opacity: 0.65;
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-bottom: 6px;
+    }
+
+    /* ── API Gateway ── */
+    .gateway {
+      background: linear-gradient(135deg, rgba(14,165,233,0.18), rgba(99,102,241,0.18));
+      border-color: rgba(14,165,233,0.5);
+      box-shadow: 0 0 40px rgba(14,165,233,0.15), 0 0 0 1px rgba(14,165,233,0.2);
+      padding: 20px 48px;
+    }
+    .gateway:hover { box-shadow: 0 0 60px rgba(14,165,233,0.3), 0 0 0 1px rgba(14,165,233,0.4); }
+    .gateway .svc-name { font-size: 1.05rem; color: #7dd3fc; }
+    .gateway .port { font-size: 0.78rem; color: #94a3b8; }
+    .gateway .badge { background: rgba(14,165,233,0.2); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
+
+    /* ── Service colour themes ── */
+    .auth   { background: rgba(168,85,247,0.12);  border-color: rgba(168,85,247,0.4);  box-shadow: 0 4px 24px rgba(168,85,247,0.12); }
+    .auth   .svc-name { color: #c084fc; }
+    .auth   .badge    { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+    .auth:hover   { box-shadow: 0 8px 36px rgba(168,85,247,0.25); }
+
+    .user   { background: rgba(52,211,153,0.1);   border-color: rgba(52,211,153,0.4);   box-shadow: 0 4px 24px rgba(52,211,153,0.1); }
+    .user   .svc-name { color: #6ee7b7; }
+    .user   .badge    { background: rgba(52,211,153,0.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .user:hover   { box-shadow: 0 8px 36px rgba(52,211,153,0.25); }
+
+    .loan   { background: rgba(251,146,60,0.1);   border-color: rgba(251,146,60,0.4);   box-shadow: 0 4px 24px rgba(251,146,60,0.1); }
+    .loan   .svc-name { color: #fb923c; }
+    .loan   .badge    { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .loan:hover   { box-shadow: 0 8px 36px rgba(251,146,60,0.25); }
+
+    .campaign { background: rgba(244,114,182,0.1); border-color: rgba(244,114,182,0.4); box-shadow: 0 4px 24px rgba(244,114,182,0.1); }
+    .campaign .svc-name { color: #f472b6; }
+    .campaign .badge    { background: rgba(244,114,182,0.15); color: #f472b6; border: 1px solid rgba(244,114,182,0.3); }
+    .campaign:hover { box-shadow: 0 8px 36px rgba(244,114,182,0.25); }
+
+    .donation { background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.4); box-shadow: 0 4px 24px rgba(250,204,21,0.08); }
+    .donation .svc-name { color: #fde047; }
+    .donation .badge    { background: rgba(250,204,21,0.12); color: #fde047; border: 1px solid rgba(250,204,21,0.3); }
+    .donation:hover { box-shadow: 0 8px 36px rgba(250,204,21,0.2); }
+
+    .payment  { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.4); box-shadow: 0 4px 24px rgba(248,113,113,0.1); }
+    .payment  .svc-name { color: #f87171; }
+    .payment  .badge    { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    .payment:hover  { box-shadow: 0 8px 36px rgba(248,113,113,0.25); }
+
+    .notif    { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.4); box-shadow: 0 4px 24px rgba(34,211,238,0.08); }
+    .notif    .svc-name { color: #67e8f9; }
+    .notif    .badge    { background: rgba(34,211,238,0.12); color: #67e8f9; border: 1px solid rgba(34,211,238,0.3); }
+    .notif:hover    { box-shadow: 0 8px 36px rgba(34,211,238,0.22); }
+
+    .ai       { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); box-shadow: 0 4px 24px rgba(34,197,94,0.1); }
+    .ai       .svc-name { color: #4ade80; }
+    .ai       .badge    { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .ai:hover       { box-shadow: 0 8px 36px rgba(34,197,94,0.25); }
+
+    /* ── Infra ── */
+    .eureka   { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.4); box-shadow: 0 4px 24px rgba(99,102,241,0.1); }
+    .eureka   .svc-name { color: #818cf8; }
+    .eureka   .badge    { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+    .eureka:hover   { box-shadow: 0 8px 36px rgba(99,102,241,0.25); }
+
+    .config   { background: rgba(148,163,184,0.08); border-color: rgba(148,163,184,0.35); box-shadow: 0 4px 24px rgba(148,163,184,0.06); }
+    .config   .svc-name { color: #cbd5e1; }
+    .config   .badge    { background: rgba(148,163,184,0.12); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.25); }
+    .config:hover   { box-shadow: 0 8px 36px rgba(148,163,184,0.2); }
+
+    /* ── Connector lines (SVG) ── */
+    svg.connectors {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Row layouts ── */
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .connector-wrap {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Arrow spacers */
+    .arrow-down {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 48px;
+      position: relative;
+    }
+    .arrow-down::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(99,102,241,0.6), rgba(99,102,241,0.1));
+    }
+    .arrow-down::after {
+      content: '▼';
+      font-size: 14px;
+      color: rgba(99,102,241,0.8);
+      position: absolute;
+      bottom: 2px;
+    }
+
+    .arrow-spread {
+      height: 60px;
+      width: 100%;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .arrow-spread svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .infra-row {
+      margin-top: 12px;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 48px;
+      padding: 20px 32px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      max-width: 700px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* ── Tooltip ── */
+    [data-tip] { position: relative; }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #e2e8f0;
+      font-size: 0.7rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+      z-index: 100;
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #475569;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Title -->
+  <div class="title-block">
+    <h1>Microservices Architecture</h1>
+    <p>Spring Cloud · Spring Boot · Eureka · API Gateway</p>
+  </div>
+
+  <!-- Diagram -->
+  <div class="diagram" id="diagram">
+
+    <!-- ① API Gateway -->
+    <div class="section-label">Entry Point</div>
+    <div class="card gateway" id="gw" data-tip="Routes all external traffic to downstream services">
+      <div class="badge">API Gateway</div>
+      <div class="svc-name">Spring Cloud Gateway</div>
+      <div class="port">:8080</div>
+    </div>
+
+    <!-- Spread arrows -->
+    <div class="arrow-spread" id="spread-arrow">
+      <svg id="spread-svg" viewBox="0 0 900 60" preserveAspectRatio="none">
+        <defs>
+          <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(99,102,241,0.7)"/>
+          </marker>
+          <marker id="arrow-infra" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(148,163,184,0.5)"/>
+          </marker>
+        </defs>
+        <!-- Will be drawn by JS -->
+      </svg>
+    </div>
+
+    <!-- ② Microservices Row 1 -->
+    <div class="section-label">Core Services</div>
+    <div class="row" id="row1">
+      <div class="card auth" id="auth" data-tip="JWT/OAuth2 Authentication & Authorization">
+        <div class="badge">Security</div>
+        <div class="svc-name">auth-service</div>
+        <div class="port">:8081</div>
+      </div>
+      <div class="card user" id="user" data-tip="User profiles, KYC & account management">
+        <div class="badge">Users</div>
+        <div class="svc-name">user-service</div>
+        <div class="port">:8082</div>
+      </div>
+      <div class="card loan" id="loan" data-tip="Loan origination, underwriting & servicing">
+        <div class="badge">Finance</div>
+        <div class="svc-name">loan-service</div>
+        <div class="port">:8083</div>
+      </div>
+      <div class="card campaign" id="campaign" data-tip="Crowdfunding campaign lifecycle management">
+        <div class="badge">Campaigns</div>
+        <div class="svc-name">campaign-service</div>
+        <div class="port">:8084</div>
+      </div>
+    </div>
+
+    <!-- Row 2 spacer -->
+    <div style="height:20px"></div>
+
+    <!-- ③ Microservices Row 2 -->
+    <div class="row" id="row2">
+      <div class="card donation" id="donation" data-tip="Donor transactions & fund disbursement">
+        <div class="badge">Giving</div>
+        <div class="svc-name">donation-service</div>
+        <div class="port">:8085</div>
+      </div>
+      <div class="card payment" id="payment" data-tip="Payment gateway integration & reconciliation">
+        <div class="badge">Payments</div>
+        <div class="svc-name">payment-service</div>
+        <div class="port">:8086</div>
+      </div>
+      <div class="card notif" id="notif" data-tip="Email, SMS & push notification delivery">
+        <div class="badge">Alerts</div>
+        <div class="svc-name">notification-service</div>
+        <div class="port">:8087</div>
+      </div>
+      <div class="card ai" id="ai" data-tip="LLM generation for descriptions and messages via Groq API">
+        <div class="badge">Intelligence</div>
+        <div class="svc-name">ai-service</div>
+        <div class="port">:8088</div>
+      </div>
+    </div>
+
+    <!-- ④ Infra row -->
+    <div style="height: 40px; display:flex; align-items:center; justify-content:center; width:100%; position:relative;">
+      <div style="width:2px; height:100%; background: linear-gradient(to bottom, rgba(148,163,184,0.3), rgba(99,102,241,0.4));"></div>
+    </div>
+
+    <div class="section-label" style="margin-top:0">Infrastructure</div>
+    <div class="row infra-row">
+      <div class="card eureka" id="eureka" data-tip="Service registry — all services register here on startup">
+        <div class="badge">Service Discovery</div>
+        <div class="svc-name">discovery-server</div>
+        <div class="port">Eureka · :8761</div>
+      </div>
+      <div class="card config" id="config" data-tip="Centralised config — Git-backed property management">
+        <div class="badge">Config Server</div>
+        <div class="svc-name">config-server</div>
+        <div class="port">:8888</div>
+      </div>
+    </div>
+
+  </div><!-- /diagram -->
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div> API Gateway</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> Auth Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6ee7b7"></div> User Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Loan Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Campaign Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fde047"></div> Donation Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Payment Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#67e8f9"></div> Notification Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> AI Service</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#818cf8"></div> Eureka Discovery</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#cbd5e1"></div> Config Server</div>
+  </div>
+
+  <script>
+    // Draw SVG fan lines from gateway to service cards
+    function drawArrows() {
+      const svg = document.getElementById('spread-svg');
+      svg.innerHTML = `
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(99,102,241,0.65)"/>
+          </marker>
+          <linearGradient id="lg1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:rgba(99,102,241,0.7)"/>
+            <stop offset="100%" style="stop-color:rgba(99,102,241,0.15)"/>
+          </linearGradient>
+        </defs>
+      `;
+
+      const diagramEl = document.getElementById('diagram');
+      const svgEl = document.getElementById('spread-svg');
+      const spreadWrap = document.getElementById('spread-arrow');
+
+      const diagramRect = diagramEl.getBoundingClientRect();
+      const spreadRect  = spreadWrap.getBoundingClientRect();
+      const gwEl        = document.getElementById('gw');
+      const gwRect      = gwEl.getBoundingClientRect();
+
+      // Source point (bottom centre of gateway, relative to spread SVG)
+      const srcX = gwRect.left + gwRect.width / 2 - spreadRect.left;
+      const srcY = 0;
+
+      const targets = ['auth','user','loan','campaign','donation','payment','notif','ai'];
+      targets.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const tx = r.left + r.width / 2 - spreadRect.left;
+        // scale to viewBox width=900
+        const scale = 900 / spreadRect.width;
+        const sx = srcX * scale;
+        const sy = srcY;
+        const ex = tx * scale;
+        const ey = 55;
+
+        const cx1 = sx, cy1 = 25;
+        const cx2 = ex, cy2 = 30;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d', `M${sx},${sy} C${cx1},${cy1} ${cx2},${cy2} ${ex},${ey}`);
+        path.setAttribute('stroke', 'url(#lg1)');
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('marker-end', 'url(#arr)');
+        path.setAttribute('stroke-dasharray', '4 3');
+        svg.appendChild(path);
+      });
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(drawArrows, 100);
+    });
+    window.addEventListener('resize', drawArrows);
+  </script>
+</body>
+</html>

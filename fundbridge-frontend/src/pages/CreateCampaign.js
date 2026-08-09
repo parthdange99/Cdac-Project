@@ -15,6 +15,7 @@ export default function CreateCampaign() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [generatingAi, setGeneratingAi] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>
@@ -39,6 +40,27 @@ export default function CreateCampaign() {
     }
   };
 
+  const handleGenerateAI = async () => {
+    if (!form.title) {
+      setError("Please enter a title first so the AI knows what to write about!");
+      return;
+    }
+    setError("");
+    setGeneratingAi(true);
+    try {
+      const res = await api.post("/ai/generate-description", {
+        title: form.title,
+        category: form.category || "General",
+      });
+      const generatedText = res.data.data.description;
+      setForm((prev) => ({ ...prev, description: generatedText }));
+    } catch (err) {
+      setError("AI Generation failed. Please try again or write it manually.");
+    } finally {
+      setGeneratingAi(false);
+    }
+  };
+
   return (
     <div className="page narrow">
       <form className="card" onSubmit={handleSubmit}>
@@ -57,7 +79,25 @@ export default function CreateCampaign() {
           required
         />
 
-        <label>Description</label>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <label style={{ margin: 0 }}>Description</label>
+          <button 
+            type="button" 
+            onClick={handleGenerateAI} 
+            disabled={generatingAi || !form.title}
+            style={{ 
+              background: "linear-gradient(90deg, #a855f7, #ec4899)", 
+              color: "white", 
+              border: "none", 
+              padding: "4px 12px", 
+              borderRadius: "20px",
+              cursor: "pointer",
+              fontSize: "0.85rem"
+            }}
+          >
+            {generatingAi ? "✨ Generating..." : "✨ Generate with AI"}
+          </button>
+        </div>
         <textarea
           name="description"
           rows={5}

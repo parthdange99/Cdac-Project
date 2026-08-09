@@ -89,6 +89,14 @@ spring:
           filters:
             - StripPrefix=0
 
+        # AI Service Routes
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/ai/**
+          filters:
+            - StripPrefix=0
+
 eureka:
   client:
     service-url:

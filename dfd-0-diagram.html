@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FundBridge DFD Level 0</title>
+  <!-- Mermaid JS -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #ffffff;
+      font-family: sans-serif;
+    }
+    .diagram-container {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-container">
+    <div class="mermaid">
+      graph LR
+          %% Styling
+          classDef entity fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a,font-weight:bold,padding:10px
+          classDef system fill:#0ea5e9,stroke:#0369a1,stroke-width:3px,color:#ffffff,font-weight:bold
+          
+          %% External Entities (Rectangles)
+          User["User<br>(Donor / Campaign Creator)"]:::entity
+          Admin["System Administrator"]:::entity
+          Razorpay["Razorpay<br>(Payment Gateway)"]:::entity
+          Groq["Groq AI API<br>(LLM Provider)"]:::entity
+          
+          %% Central Process (Circle)
+          System(("0.0<br><br>FundBridge<br>Platform")):::system
+          
+          %% Data Flows
+          User -- "User Details, Campaign Data, Donations" --> System
+          System -- "Campaign Status, AI Text, Receipts" --> User
+          
+          Admin -- "Approvals, User Status Updates" --> System
+          System -- "Dashboards, Pending Campaigns" --> Admin
+          
+          System -- "Payment Order Requests" --> Razorpay
+          Razorpay -- "Payment Confirmation" --> System
+          
+          System -- "Text Prompts" --> Groq
+          Groq -- "Generated Descriptions / Messages" --> System
+    </div>
+  </div>
+</body>
+</html>

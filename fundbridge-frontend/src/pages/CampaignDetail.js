@@ -21,6 +21,7 @@ export default function CampaignDetail() {
   const [donating, setDonating] = useState(false);
   const [donateError, setDonateError] = useState("");
   const [donateSuccess, setDonateSuccess] = useState("");
+  const [suggestingAi, setSuggestingAi] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,6 +43,22 @@ export default function CampaignDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleSuggestMessage = async () => {
+    setDonateError("");
+    setSuggestingAi(true);
+    try {
+      const res = await api.post("/ai/suggest-donation-message", {
+        donorName: anonymous ? "Anonymous" : (user?.username || "Anonymous"),
+        campaignTitle: campaign.title,
+      });
+      setMessage(res.data.data.message);
+    } catch (err) {
+      setDonateError("Could not generate AI message. Please try again.");
+    } finally {
+      setSuggestingAi(false);
+    }
+  };
 
   const handleDonate = async (e) => {
     e.preventDefault();
@@ -207,7 +224,25 @@ export default function CampaignDetail() {
               required
               placeholder="500"
             />
-            <label>Message (optional)</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
+              <label style={{ margin: 0 }}>Message (optional)</label>
+              <button 
+                type="button" 
+                onClick={handleSuggestMessage} 
+                disabled={suggestingAi}
+                style={{ 
+                  background: "linear-gradient(90deg, #a855f7, #ec4899)", 
+                  color: "white", 
+                  border: "none", 
+                  padding: "2px 8px", 
+                  borderRadius: "15px",
+                  cursor: "pointer",
+                  fontSize: "0.75rem"
+                }}
+              >
+                {suggestingAi ? "✨ Generating..." : "✨ Suggest Message"}
+              </button>
+            </div>
             <textarea
               rows={2}
               value={message}
