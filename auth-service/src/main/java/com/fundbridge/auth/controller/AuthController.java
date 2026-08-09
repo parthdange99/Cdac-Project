@@ -35,4 +35,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> health() {
         return ResponseEntity.ok(ApiResponse.success("Auth service is running"));
     }
+
+    @PutMapping("/internal/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> updateStatus(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        authService.updateUserStatus(id, active);
+        return ResponseEntity.ok(ApiResponse.success("User status updated", null));
+    }
 }

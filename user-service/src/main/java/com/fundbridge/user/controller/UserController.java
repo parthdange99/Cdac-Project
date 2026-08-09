@@ -80,4 +80,16 @@ public class UserController {
         userService.deactivateUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deactivated", null));
     }
+
+    @PatchMapping("/admin/{id}/activate")
+    public ResponseEntity<ApiResponse<Void>> activateUser(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Role") String role) {
+        if (!role.equals("ROLE_ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied"));
+        }
+        userService.activateUser(id);
+        return ResponseEntity.ok(ApiResponse.success("User activated", null));
+    }
 }

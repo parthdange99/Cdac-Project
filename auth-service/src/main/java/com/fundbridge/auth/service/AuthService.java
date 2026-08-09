@@ -7,4 +7,5 @@ import com.fundbridge.common.dto.response.AuthResponse;
 public interface AuthService {
     AuthResponse register(RegisterRequest request);
     AuthResponse login(LoginRequest request);
+    void updateUserStatus(Long authUserId, boolean active);
 }

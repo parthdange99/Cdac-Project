@@ -14,4 +14,5 @@ public interface UserService {
     UserProfile createUserProfile(CreateUserRequest request);
     List<UserProfile> getAllUsers();
     void deactivateUser(Long id);
+    void activateUser(Long id);
 }

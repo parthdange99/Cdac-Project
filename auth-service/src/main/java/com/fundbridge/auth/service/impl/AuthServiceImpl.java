@@ -101,4 +101,13 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void updateUserStatus(Long authUserId, boolean active) {
+        AuthUser user = authUserRepository.findById(authUserId)
+                .orElseThrow(() -> new BadRequestException("AuthUser not found"));
+        user.setActive(active);
+        authUserRepository.save(user);
+    }
 }

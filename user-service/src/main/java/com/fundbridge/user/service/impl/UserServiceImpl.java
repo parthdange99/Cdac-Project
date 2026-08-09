@@ -7,7 +7,9 @@ import com.fundbridge.user.dto.UpdateProfileRequest;
 import com.fundbridge.user.entity.UserProfile;
 import com.fundbridge.user.repository.UserProfileRepository;
 import com.fundbridge.user.service.UserService;
+import com.fundbridge.user.client.AuthClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +17,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserProfileRepository userProfileRepository;
+    private final AuthClient authClient;
 
     @Override
     public UserProfile getProfileByEmail(String email) {
@@ -80,5 +84,26 @@ public class UserServiceImpl implements UserService {
         UserProfile user = getUserById(id);
         user.setActive(false);
         userProfileRepository.save(user);
+        
+        try {
+            authClient.updateStatus(user.getAuthUserId(), false);
+        } catch (Exception e) {
+            log.error("Failed to sync deactivation with auth-service for authUserId: {}", user.getAuthUserId(), e);
+            throw new RuntimeException("Failed to sync with auth-service: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void activateUser(Long id) {
+        UserProfile user = getUserById(id);
+        user.setActive(true);
+        userProfileRepository.save(user);
+        
+        try {
+            authClient.updateStatus(user.getAuthUserId(), true);
+        } catch (Exception e) {
+            log.error("Failed to sync activation with auth-service for authUserId: {}", user.getAuthUserId(), e);
+        }
     }
 }
