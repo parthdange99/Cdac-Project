@@ -1,0 +1,260 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # MySQL Database
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: fundbridge-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: pkd123
+      MYSQL_USER: fundbridge
+      MYSQL_PASSWORD: fundbridge123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Discovery Server (Eureka) - Start First
+  # ============================================================
+  discovery-server:
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    container_name: fundbridge-discovery
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Config Server - Start Second
+  # ============================================================
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: fundbridge-config
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Auth Service (Port 8081)
+  # ============================================================
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-auth
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_auth?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+      JWT_SECRET: FundBridge_Super_Secret_Key_2026_MicroservicesEdition
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # User Service (Port 8082)
+  # ============================================================
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-users
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_users?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Loan Service (Port 8083)
+  # ============================================================
+  loan-service:
+    build:
+      context: ./loan-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-loans
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_loans?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Campaign Service (Port 8084)
+  # ============================================================
+  campaign-service:
+    build:
+      context: ./campaign-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-campaigns
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_campaigns?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Donation Service (Port 8085)
+  # ============================================================
+  donation-service:
+    build:
+      context: ./donation-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-donations
+    ports:
+      - "8085:8085"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_donations?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      campaign-service:
+        condition: service_started
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Payment Service (Port 8086)
+  # ============================================================
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-payments
+    ports:
+      - "8086:8086"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_payments?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+      RAZORPAY_KEY_ID: rzp_test_TH8MltEKux2Yht
+      RAZORPAY_KEY_SECRET: BxhfgTALeqnbCF6OMTXbNbIN
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # Notification Service (Port 8087)
+  # ============================================================
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: fundbridge-notifications
+    ports:
+      - "8087:8087"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/fundbridge_notifications?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: pkd123
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - fundbridge-network
+
+  # ============================================================
+  # API Gateway (Port 8080) - Start Last
+  # ============================================================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: fundbridge-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:eureka-secret@discovery-server:8761/eureka/
+      JWT_SECRET: FundBridge_Super_Secret_Key_2026_MicroservicesEdition
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - fundbridge-network
+
+volumes:
+  mysql_data:
+
+networks:
+  fundbridge-network:
+    driver: bridge

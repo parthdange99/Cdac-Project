@@ -1,0 +1,26 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: loan-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/fundbridge_loans?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:pkd123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:FundBridge_Super_Secret_Key_2026_MicroservicesEdition}
+
+logging:
+  level:
+    com.fundbridge: DEBUG

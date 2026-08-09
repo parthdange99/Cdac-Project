@@ -1,0 +1,31 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/fundbridge_payments?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:pkd123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+razorpay:
+  key:
+    id: ${RAZORPAY_KEY_ID:rzp_test_TH8MltEKux2Yht}
+    secret: ${RAZORPAY_KEY_SECRET:BxhfgTALeqnbCF6OMTXbNbIN}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:FundBridge_Super_Secret_Key_2026_MicroservicesEdition}
+
+logging:
+  level:
+    com.fundbridge: DEBUG

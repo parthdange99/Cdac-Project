@@ -1,0 +1,14 @@
+# Multi-stage build for Spring Boot microservice
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+# Note: Build the JAR by running: mvn clean package -DskipTests from the service root
+# The JAR should already be in target/ when using this Dockerfile
+COPY target/*.jar app.jar
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/app.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
